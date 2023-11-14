@@ -10,11 +10,11 @@ import numpy as np
 from sample_utils.turn import get_ice_servers
 import os
 import sys
+from utils import detect_smile
 
-draw_rect = False
+draw_rect = True
 cascade_face = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 cascade_smile = cv2.CascadeClassifier('haarcascade_smile.xml')
-cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
 overlay = cv2.imread('overlays/rayban2.png', cv2.IMREAD_UNCHANGED)
 logo_overlay = cv2.imread('overlays/rayban_logo.png', cv2.IMREAD_UNCHANGED)
@@ -22,6 +22,15 @@ reward_overlay = cv2.imread('overlays/you_donated_a_smile.png', cv2.IMREAD_UNCHA
 
 
 _type = st.radio("Select transform type", ("noop", "cartoon", "edges", "rotate"))
+
+count_filter_time = 0
+smiling_time = 0
+filter_time_threshold = 10
+smile_time_threshold = 1 # how much time before the filter is shown
+waiting_for_smile = False
+length_smile_memory = 3 
+fps = 30 #TODO: change 
+smile_memory = []
 
 def overlay_bgra(background: np.ndarray, overlay: np.ndarray, roi):
     roi_x, roi_y, roi_w, roi_h = roi
@@ -73,32 +82,25 @@ def callback(frame: av.VideoFrame) -> av.VideoFrame:
     if(_type == "noop"):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        faces = cascade.detectMultiScale(
+        faces = cascade_face.detectMultiScale(
             gray, scaleFactor=1.11, minNeighbors=3, minSize=(30, 30)
         )
 
         overlay = cv2.imread('overlays/rayban2.png', cv2.IMREAD_UNCHANGED)
+        is_smiling = detect_smile(gray, faces, cascade_smile)
 
+        
         for (x, y, w, h) in faces:
             # Ad-hoc adjustment of the ROI for each filter type
             roi = (x, y, w, h)
-            overlay_bgra(img, overlay, roi)
-            if draw_rect:
-                img = cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-            '''
-            if self.filter_type == "ironman":
-                roi = (x, y, w, h)
-            elif self.filter_type == "laughing_man":
-                roi = (x, y, int(w * 1.15), h)
-            elif self.filter_type == "cat":
-                roi = (x, y - int(h * 0.3), w, h)
-            overlay_bgra(img, overlay, roi)
-
-            if self.draw_rect:
-                img = cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-    '''
-            return av.VideoFrame.from_ndarray(img, format="bgr24")
-
+            img = cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            if is_smiling:
+                smiling_time += 1
+                if (smiling_time >= 20):
+                    overlay_bgra(img, overlay, roi)
+            else:
+                smiling_time = 0
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
 
     elif _type == "cartoon":
         # prepare color
