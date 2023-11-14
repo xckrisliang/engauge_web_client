@@ -38,6 +38,7 @@ matplotlib==3.7.3
 mdurl==0.1.2
 multidict==6.0.4
 numpy==1.24.4
+opencv-contrib-python-headless
 packaging==23.2
 pandas==2.0.3
 Pillow==10.1.0
@@ -53,7 +54,6 @@ PyJWT==2.8.0
 pylibsrtp==0.8.0
 pyOpenSSL==23.3.0
 pyparsing==3.1.1
-python-dateutil==2.8.2
 pytz==2023.3.post1
 referencing==0.30.2
 requests==2.31.0
