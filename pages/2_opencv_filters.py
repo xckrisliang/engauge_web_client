@@ -94,7 +94,7 @@ def callback(frame: av.VideoFrame) -> av.VideoFrame:
             # Ad-hoc adjustment of the ROI for each filter type
         #roi = (x, y, w, h)
         img = cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        overlay_bgra(img, logo_overlay, (x,y-h,w,h))
+        #overlay_bgra(img, logo_overlay, (x,y-h,w,h))
         #overlay_bgra(img, overlay, face)
         if is_smiling:
             overlay_bgra(img, overlay, face)
